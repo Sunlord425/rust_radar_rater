@@ -1,5 +1,7 @@
-use std::io;
+use std::{io, path};
 use std::collections::HashMap;
+use std::fs;
+use std::convert::TryFrom;
 extern crate savefile;
 use savefile::prelude::*;
 
@@ -7,43 +9,10 @@ use savefile::prelude::*;
 extern crate savefile_derive;
 fn main() 
 {
-    let mut pizza_metrics: HashMap<String, f32>= HashMap::new(); 
-
-        pizza_metrics.insert("Flavor".to_string(), 0.0);
-        pizza_metrics.insert("Texture".to_string(), 0.0);
-        pizza_metrics.insert("Novelty".to_string(), 0.0);
-        pizza_metrics.insert("Popularity".to_string(), 0.0);
-
-    let pizza_blueprint = build_blueprint(pizza_metrics, "Pizza".to_string());
-    let mut pizza_chocies:Vec<Item> = Vec::new();
-
-    let mut pizza_cheese_ratings: HashMap<String, f32> = HashMap::new();
-        pizza_cheese_ratings.insert("Flavor".to_string(), 5.5);
-        pizza_cheese_ratings.insert("Texture".to_string(), 5.0);
-        pizza_cheese_ratings.insert("Novelty".to_string(), 1.0);
-        pizza_cheese_ratings.insert("Popularity".to_string(), 8.5);
-
-    let mut pizza_pepperoni_ratings: HashMap<String, f32> = HashMap::new();
-        pizza_pepperoni_ratings.insert("Flavor".to_string(), 5.8);
-        pizza_pepperoni_ratings.insert("Texture".to_string(), 6.2);
-        pizza_pepperoni_ratings.insert("Novelty".to_string(), 2.5);
-        pizza_pepperoni_ratings.insert("Popularity".to_string(), 7.2);
-
-    let mut pizza_pineapple_ratings: HashMap<String, f32> = HashMap::new();
-        pizza_pineapple_ratings.insert("Flavor".to_string(), 2.1);
-        pizza_pineapple_ratings.insert("Texture".to_string(), 2.0);
-        pizza_pineapple_ratings.insert("Novelty".to_string(), 6.0);
-        pizza_pineapple_ratings.insert("Popularity".to_string(), 4.5);
-
-    pizza_chocies.push(build_item(&pizza_blueprint, "Cheese".to_string(), pizza_cheese_ratings ));
-    pizza_chocies.push(build_item(&pizza_blueprint, "Pepperoni".to_string(), pizza_pepperoni_ratings ));
-    pizza_chocies.push(build_item(&pizza_blueprint, "Pineapple".to_string(), pizza_pineapple_ratings ));
-
-    let pizza_types: Catagory = Catagory { name: "Pizzas!".to_string(), items: pizza_chocies };
-    save_catagory(&pizza_types);
-    println!("{:?}", pizza_types);
-    let pizza_types = load_catagory(String::from("Pizzas!"));
-    println!("{:?}", pizza_types);
+    let mut current_catagory = Catagory {
+        name: "None".to_string(),
+        items: Vec::new()
+    };
     loop
     {
         println!("Enter Command: ");
@@ -55,8 +24,71 @@ fn main()
         
         match cmd.as_str().trim()
         {
-            "/display" => continue,
-            "/quit" => break,
+            "/display" => 
+            {
+                if current_catagory.name == "None" 
+                {
+                    println!("no catagory currently loaded")
+                }
+                else
+                {
+                    println!("{:?}", current_catagory);
+                }
+                continue;
+            },
+            "/save" => 
+            {
+                save_catagory(&current_catagory);
+                continue;
+            },
+            "/load" =>
+            {
+                let paths = get_savenames("./saves");
+
+                println!("saves found: \n");
+                let mut save_iter:u32 = 0;
+                for s in &paths
+                {
+                    println!("\t{}. {}",save_iter,&s[8..]);
+                    save_iter += 1;
+                }
+
+                println!("select save number: ");
+
+                let mut save_number: String = String::new();
+
+                io::stdin()
+                    .read_line(&mut save_number)
+                    .expect("Failed to read line");
+
+                let save_number: u32 = match save_number.trim().parse()
+                {
+                    Ok(num) => num,
+                    Err(_) => {println!("Error: input must be a number"); continue;},
+                };
+
+                if save_iter >= save_number
+                {
+                    let index = usize::try_from(save_number).unwrap();
+                    println!("{}",&paths[index]);
+                    current_catagory = load_catagory(&paths[index]);
+                }
+                else 
+                {
+                    println!("selection out of range");
+                    continue;
+                }
+                
+
+                continue;
+        
+            }
+            "/q" => break,
+            "/wq" => 
+            {
+                save_catagory(&current_catagory);
+                break;
+            },
             other => 
             {
                 println!("command \'{}\' does not exist \n", other.trim());
@@ -129,7 +161,18 @@ fn save_catagory(catagory: &Catagory)
 {
     save_file(format!("./saves/{}_save.bin", catagory.name), 0, catagory).unwrap();
 }
-fn load_catagory(name: String) -> Catagory
+
+fn load_catagory(pathname: &String) -> Catagory
 {
-    load_file(format!("./saves/{}_save.bin",name.to_string()), 0).unwrap()
+    load_file(format!("{}",pathname.to_string()), 0).unwrap()
+}
+
+fn get_savenames(pathname: &str) -> Vec<String>
+{
+    let paths = fs::read_dir(&pathname)
+                .unwrap()
+                .filter_map(|e| e.ok())
+                .map(|e| e.path().to_string_lossy().into_owned())
+                .collect::<Vec<_>>();
+    paths
 }
