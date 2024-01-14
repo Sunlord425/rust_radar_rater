@@ -1,5 +1,10 @@
 use std::io;
 use std::collections::HashMap;
+extern crate savefile;
+use savefile::prelude::*;
+
+#[macro_use]
+extern crate savefile_derive;
 fn main() 
 {
     let mut pizza_metrics: HashMap<String, f32>= HashMap::new(); 
@@ -35,8 +40,10 @@ fn main()
     pizza_chocies.push(build_item(&pizza_blueprint, "Pineapple".to_string(), pizza_pineapple_ratings ));
 
     let pizza_types: Catagory = Catagory { name: "Pizzas!".to_string(), items: pizza_chocies };
-
-
+    save_catagory(&pizza_types);
+    println!("{:?}", pizza_types);
+    let pizza_types = load_catagory(String::from("Pizzas!"));
+    println!("{:?}", pizza_types);
     loop
     {
         println!("Enter Command: ");
@@ -48,6 +55,7 @@ fn main()
         
         match cmd.as_str().trim()
         {
+            "/display" => continue,
             "/quit" => break,
             other => 
             {
@@ -58,13 +66,14 @@ fn main()
     }
 }
 
+#[derive(Debug, Savefile)]
 struct Catagory
 {
     name: String,
     items: Vec<Item>
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Savefile)]
 struct Item
 {
     name: String,
@@ -115,4 +124,12 @@ fn metric_key_equality_check(map1:&HashMap<String,f32>, map2:&HashMap<String,f32
         }
     }
     key_match
+}
+fn save_catagory(catagory: &Catagory) 
+{
+    save_file(format!("./saves/{}_save.bin", catagory.name), 0, catagory).unwrap();
+}
+fn load_catagory(name: String) -> Catagory
+{
+    load_file(format!("./saves/{}_save.bin",name.to_string()), 0).unwrap()
 }
