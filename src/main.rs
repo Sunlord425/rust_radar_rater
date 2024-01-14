@@ -2,6 +2,41 @@ use std::io;
 use std::collections::HashMap;
 fn main() 
 {
+    let mut pizza_metrics: HashMap<String, f32>= HashMap::new(); 
+
+        pizza_metrics.insert("Flavor".to_string(), 0.0);
+        pizza_metrics.insert("Texture".to_string(), 0.0);
+        pizza_metrics.insert("Novelty".to_string(), 0.0);
+        pizza_metrics.insert("Popularity".to_string(), 0.0);
+
+    let pizza_blueprint = build_blueprint(pizza_metrics, "Pizza".to_string());
+    let mut pizza_chocies:Vec<Item> = Vec::new();
+
+    let mut pizza_cheese_ratings: HashMap<String, f32> = HashMap::new();
+        pizza_cheese_ratings.insert("Flavor".to_string(), 5.5);
+        pizza_cheese_ratings.insert("Texture".to_string(), 5.0);
+        pizza_cheese_ratings.insert("Novelty".to_string(), 1.0);
+        pizza_cheese_ratings.insert("Popularity".to_string(), 8.5);
+
+    let mut pizza_pepperoni_ratings: HashMap<String, f32> = HashMap::new();
+        pizza_pepperoni_ratings.insert("Flavor".to_string(), 5.8);
+        pizza_pepperoni_ratings.insert("Texture".to_string(), 6.2);
+        pizza_pepperoni_ratings.insert("Novelty".to_string(), 2.5);
+        pizza_pepperoni_ratings.insert("Popularity".to_string(), 7.2);
+
+    let mut pizza_pineapple_ratings: HashMap<String, f32> = HashMap::new();
+        pizza_pineapple_ratings.insert("Flavor".to_string(), 2.1);
+        pizza_pineapple_ratings.insert("Texture".to_string(), 2.0);
+        pizza_pineapple_ratings.insert("Novelty".to_string(), 6.0);
+        pizza_pineapple_ratings.insert("Popularity".to_string(), 4.5);
+
+    pizza_chocies.push(build_item(&pizza_blueprint, "Cheese".to_string(), pizza_cheese_ratings ));
+    pizza_chocies.push(build_item(&pizza_blueprint, "Pepperoni".to_string(), pizza_pepperoni_ratings ));
+    pizza_chocies.push(build_item(&pizza_blueprint, "Pineapple".to_string(), pizza_pineapple_ratings ));
+
+    let pizza_types: Catagory = Catagory { name: "Pizzas!".to_string(), items: pizza_chocies };
+
+
     loop
     {
         println!("Enter Command: ");
@@ -29,6 +64,7 @@ struct Catagory
     items: Vec<Item>
 }
 
+#[derive(Clone, Debug)]
 struct Item
 {
     name: String,
@@ -37,14 +73,14 @@ struct Item
 
 
 
-fn build_item(blueprint: Item, name: String, scores: HashMap<String, f32>) -> Item 
+fn build_item(blueprint: &Item, name: String, scores: HashMap<String, f32>) -> Item 
 {
 
     if !(metric_key_equality_check(&blueprint.metrics, &scores))
     {
         panic!("Error: blueprint field mismatch for item {}", name.trim());
     }
-    let mut item_out = blueprint;
+    let mut item_out = blueprint.clone();
     item_out.metrics = scores;
     item_out.name = name;
     
