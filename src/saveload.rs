@@ -4,9 +4,14 @@ use std::fs;
 use savefile::prelude::*;
 use crate::catagory_type::Catagory;
 
-pub fn save_catagory(catagory: &Catagory) 
+pub fn save_catagory(catagory: &Option<Catagory>) 
 {
-    save_file(format!("./saves/{}_save.bin", catagory.name), 0, catagory).unwrap();
+    match catagory 
+    {
+        None => println!("No catagory selected"),
+        Some(catagory) => save_file(format!("./saves/{}_save.bin", catagory.name), 0, catagory).unwrap()
+    }
+    
 }
 
 pub fn load_catagory(pathname: &String) -> Catagory
