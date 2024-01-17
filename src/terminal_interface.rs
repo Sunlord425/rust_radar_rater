@@ -10,7 +10,7 @@ pub fn get_input(message: String) -> String
         io::stdin()
             .read_line(&mut cmd)
             .expect("Failed to read line");
-    cmd
+    cmd.trim().to_string()
 }
 
 pub fn display(catagory: &Option<Catagory>) 

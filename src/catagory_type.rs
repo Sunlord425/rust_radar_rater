@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Error, num::ParseFloatError};
 
 use crate::terminal_interface::get_input;
 #[derive(Debug, Savefile)]
@@ -34,7 +34,7 @@ pub struct Item
 pub fn build_blueprint(metrics_in: HashMap<String, f32>, catagory: String) -> Item
 {
     let mut blueprint = Item {
-        name: format!("{} blueprint", catagory),
+        name: format!("{}_blueprint", catagory),
         metrics: metrics_in,
     };
     blueprint
@@ -69,17 +69,69 @@ pub fn build_catagory(cat_name: String) -> Catagory
     catagory_out
 }
 
-pub fn add_item( catagory: &mut Catagory, blueprint: &Item, name: String)
+pub fn add_item(catagory: &mut Option<Catagory>, name: String)
 {
-    let mut item_in = blueprint.clone();
-    item_in.name = name;
-
-    for (key, value) in item_in.metrics.clone().iter()
+    match catagory 
     {
-        let score = get_input(format!("Enter score for '{}'", key)).trim().parse().expect("Please Enter a number");
-        item_in.metrics.insert(key.clone(), score);
+        None => println!("No catagory selected"),
+        Some(cat) => 
+        {
+            let mut blueprint: Option<Item> = None;
+            for (i) in cat.items.iter()
+            {
+                if i.name == format!("{}_blueprint",cat.name) 
+                {
+                    blueprint = Some(i.clone());
+                    break;
+                }
+            }
+
+            let mut item_in = match blueprint 
+            {
+                None => {println!("Catagory has no blueprint. creating...");
+                        let mut new_blueprint = build_blueprint(HashMap::new(), cat.name.clone());
+                        if cat.items.len() != 0
+                        {
+                            
+                            for (i) in &cat.items 
+                            {
+                                if metric_key_equality_check(&cat.items[0].metrics, &i.metrics) == false 
+                                {panic!("Invalid save");}
+                            }
+                            for (k,_v) in &cat.items[0].metrics 
+                            {
+                                new_blueprint.metrics.insert(k.to_string(), 0.0);
+                            }
+                        }
+                        cat.items.push(new_blueprint.clone());
+                        new_blueprint
+                },
+                Some(item) => item
+            };
+                
+            
+            item_in.name = name;
+
+            for (key, value) in item_in.metrics.clone().iter()
+            {
+                let mut score= 0.0;
+
+                loop 
+                {
+                let input: Result<f32, ParseFloatError> = get_input(format!("Enter score for '{}'", key)).trim().parse();
+                let input = match input 
+                {
+                    Ok(out) => out,
+                    Err(e) => {println!("input must be a number");
+                            continue;}
+                };
+                score = input;
+                break;
+                }
+                item_in.metrics.insert(key.clone(), score);
+            }
+
+            cat.items.push(item_in);
+        }
     }
-
-    catagory.items.push(item_in);
-
 }
