@@ -1,11 +1,6 @@
-use std::{io, path};
-use std::collections::HashMap;
-use std::fs;
-use std::convert::TryFrom;
 extern crate savefile;
 use catagory_type::{build_catagory, add_item};
-use savefile::prelude::*;
-use terminal_interface::{get_input, display, loader};
+use terminal_interface::{get_input, display, loader, find_min, find_max};
 
 #[macro_use]
 extern crate savefile_derive;
@@ -41,6 +36,8 @@ fn main()
             "/load" => loader(&mut current_catagory),
             "/addC" => current_catagory = Some(build_catagory(get_input("Enter new catagory name".to_string()))),
             "/addI" => add_item(&mut current_catagory, get_input("Enter Item Name".to_string())),
+            "/compMin" => find_min(&current_catagory),
+            "/compMax" => find_max(&current_catagory),
             "/q" => break,
             "/wq" => 
             {

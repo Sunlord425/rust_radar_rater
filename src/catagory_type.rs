@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Error, num::ParseFloatError};
+use std::{collections::HashMap, num::ParseFloatError};
 
 use crate::terminal_interface::get_input;
 #[derive(Debug, Savefile)]
@@ -17,23 +17,9 @@ pub struct Item
 
 
 
-// pub fn build_item(blueprint: &Item, name: String, scores: HashMap<String, f32>) -> Item 
-// {
-
-//     if !(metric_key_equality_check(&blueprint.metrics, &scores))
-//     {
-//         panic!("Error: blueprint field mismatch for item {}", name.trim());
-//     }
-//     let mut item_out = blueprint.clone();
-//     item_out.metrics = scores;
-//     item_out.name = name;
-    
-//     item_out
-// }
-
 pub fn build_blueprint(metrics_in: HashMap<String, f32>, catagory: String) -> Item
 {
-    let mut blueprint = Item {
+    let blueprint = Item {
         name: format!("{}_blueprint", catagory),
         metrics: metrics_in,
     };
@@ -77,7 +63,7 @@ pub fn add_item(catagory: &mut Option<Catagory>, name: String)
         Some(cat) => 
         {
             let mut blueprint: Option<Item> = None;
-            for (i) in cat.items.iter()
+            for i in cat.items.iter()
             {
                 if i.name == format!("{}_blueprint",cat.name) 
                 {
@@ -93,7 +79,7 @@ pub fn add_item(catagory: &mut Option<Catagory>, name: String)
                         if cat.items.len() != 0
                         {
                             
-                            for (i) in &cat.items 
+                            for i in &cat.items 
                             {
                                 if metric_key_equality_check(&cat.items[0].metrics, &i.metrics) == false 
                                 {panic!("Invalid save");}
@@ -112,9 +98,9 @@ pub fn add_item(catagory: &mut Option<Catagory>, name: String)
             
             item_in.name = name;
 
-            for (key, value) in item_in.metrics.clone().iter()
+            for (key, _value) in item_in.metrics.clone().iter()
             {
-                let mut score= 0.0;
+                let score: f32;
 
                 loop 
                 {
@@ -122,7 +108,7 @@ pub fn add_item(catagory: &mut Option<Catagory>, name: String)
                 let input = match input 
                 {
                     Ok(out) => out,
-                    Err(e) => {println!("input must be a number");
+                    Err(_) => {println!("input must be a number");
                             continue;}
                 };
                 score = input;
